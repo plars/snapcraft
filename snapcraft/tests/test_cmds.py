@@ -254,3 +254,31 @@ description: # A longer description for the snap
 icon: # A path to an icon for the package
 '''
         self.assertEqual(mock_stdout.getvalue(), expected_out)
+
+    @mock.patch('sys.stdout', new_callable=io.StringIO)
+    def test_init_with_parts(self, mock_stdout):
+        fake_logger = fixtures.FakeLogger(level=logging.INFO)
+        self.useFixture(fake_logger)
+
+        snap_with_parts = type('obj', (object, ), {'part': ['empty']})
+
+        with self.assertRaises(SystemExit) as raised:
+            cmds.init(snap_with_parts)
+
+        self.assertEqual(raised.exception.code, 0, 'Wrong exit code returned.')
+        self.assertEqual(
+            'Wrote the following as snapcraft.yaml.\n',
+            fake_logger.output)
+
+        expected_out = '''
+name: # the name of the snap
+version: # the version of the snap
+# The vendor for the snap (replace 'Vendor <email@example.com>')
+vendor: Vendor <email@example.com>
+summary: # 79 char long summary
+description: # A longer description for the snap
+icon: # A path to an icon for the package
+parts:
+    empty:
+'''
+        self.assertEqual(mock_stdout.getvalue(), expected_out)
